@@ -356,14 +356,14 @@ With the maybe pick operator, it's easy:
 | Syntax   | Name | Meaning |
 |:-------- |:---- |:------- |
 | a        | simple picker | pick property `a` |
-| a!       | simple mandatory picker | pick property `a`, throw if missing |
-| a^       | simple disallow | throw if property `a` is present |
-| a*       | simple computed picker | pick property with key given by value of `a` |
+| a!       | mandatory picker | pick property `a`, throw if missing |
+| a^       | disallow picker | throw if property `a` is present |
+| a*       | computed picker | pick property with key given by value of `a` |
 | a = 42   | picker with default | pick property `a` with default |
-| b as a   | renaming picker | pick property `b` and rename to `a` |
-| b as a = 42  | renaming picker with default | pick property `b` and rename to `a`, defaulting to 42 |
-| b as fn  | renaming picker | pick property `b` and rename with result of calling fn |
-| b as a*  | renaming picker | pick property `b` and rename with value of `a` |
+| b as a   | picker with rename | pick property `b` and rename to `a` |
+| b as a = 42  | picker with rename and default | pick property `b` and rename to `a`, defaulting to 42 |
+| b as fn  | picker with functional rename | pick property `b` and rename with result of calling fn |
+| b as a*  | picker with computed rename | pick property `b` and rename with value of `a` |
 | /regexp/ | regexp picker | pick properties matching regexp |
 | fn       | filter picker | pick properties passing filter |
 | ...      | spread picker | pick remaining properties/elements |
