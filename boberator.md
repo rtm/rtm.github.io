@@ -50,7 +50,7 @@ We can give both a default and a renamer.
 
 ## Pickers
 
-A picker is one of a simple picker, an object picklst, an array picklist, or a variable picklist. The left operand of the pick operator is a picker.
+A picker is one of a simple picker, an object picklist, an array picklist, or a variable picklist. The left operand of the pick operator is a picker.
 
 ### Simple picker
 
@@ -96,11 +96,11 @@ We can also use spreads with the **maybe pick operator** (see below).
 
 To pick a property whose name is given by an expression, we use the prefix `*` operator:
 
-    *propname # o     // o[propname]
+    *propname # o               // o[propname]
 
 When picking into objects, We can rename it if we so choose:
 
-    { *propname as x } # o       // { x: o[propname] }
+    { *propname as x } # o      // { x: o[propname] }
 
 If the value of a computed picker resovles to an array, its elemnets are interpreted as property names:
 
@@ -116,19 +116,15 @@ If the picker is a regular expression, it yields all matching property names:
 
 A function given as a pickname acts as a filter on property names:
 
-    { p => /2/.test(p)} # o     // { p2: o.p2 }
+    { p => /2/.test(p) } # o    // { p2: o.p2 }
 
 We can rename properties based on an expression using the computed picker operator `*`:
 
-    { p as *newname } # o     // { [newname]: o.p }
+    { p as *newname } # o       // { [newname]: o.p }
 
 We can also rename properties, including multiple ones, by giving a function as the operand of `as`. The function is invoked with the property name:
 
-    { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }
-
-which yields
-
-    { q1: 1, q2: 2 }
+    { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }   // { q1: 1, q2: 2 }
 
 
 ## Pick assignment
@@ -137,18 +133,18 @@ Picking has an obvious relationship to deconstructing assignments. Consider:
 
     { p } = o;
 
-This has always struck me as a bit odd, and something in my experience newcomers typically wrestle.
+This has always struck me as a bit odd, and something in my experience newcomers typically wrestle with.
 Instead, in vague analogy to the addition assignment operator `+=`, we propose a **pick assignment operator** `#=`, as in
 
-    p #= o;
+    p #= o;                     // p = o.p;
 
 Multiple pickers (target variables) can be specified by providing a parenthesized list called a **variable picklist**:
 
-    ( p1, p2 ) #= o;         // p1 = o.p1; p2 = o.p2;
+    ( p1, p2 ) #= o;            // p1 = o.p1; p2 = o.p2;
 
 or to also declare the variables:
 
-    let ( p1, p2 ) #= o;
+    let ( p1, p2 ) #= o;        // let p1 = o.p1, p2 = o.p2;
 
 Like all pickers, the picker on the left side of `#=` could include defaults and renamers, so
 
@@ -211,11 +207,7 @@ whereas with the above instead we can write
 
 To pick from arrays, we introduce the **array pick operator** `@`, analogous to `#`:
 
-    { a, b } @ array
-
-resulting in
-
-    { a: array[0], b: array[1] }
+    { a, b } @ array           // { a: array[0], b: array[1] }
 
 The array pick operator has the same "maybe" variant, the **maybe array pick operator**:
 
@@ -231,7 +223,7 @@ We can declare/assign using the **array pick assignment operator**, '@=':
 
     let (a, b) @= array;
 
-With the array picker, when the LHS is object-style or array-style, the order of pickers corresponds to the order of elements in the array, with the normal convention of being able to elide elements:
+When picking from arrays, when the LHS is a picklist, the order of pickers corresponds to the order of elements in the array, with the normal convention of being able to elide elements:
 
     { a, , b } @ array    // { a: array[0], b: array[2] }
 
@@ -243,18 +235,24 @@ By extension, we also have a **maybe array pick assignment operator**.
 
     [a, b] @= if array
 
-Using computed pickers, given an array of sort indexes, we can apply it using
+The equivalent of today's `[a, b] = [b, a];` is
+
+    (a, b) @= [b, a];
+
+The power of this syntax is demonstrated by this example. Given an array of sort indexes, we can apply it using
 
     [ *indexes ] @= array
 
 
 ## Picking from arguments
 
-To provide the equivalent of deconstructing function arguments:
+Currently function arguments can be deconstructed as follows:
 
     function f({ a }) { }
 
-we use the pick (or array pick) operator, including their maybe variants, with *no right operand*. The right operand is implicitly the argument in that position in the argument list, so
+The equivalent using pick notation is to use the pick (or array pick) operator,
+including their maybe variants, with *no right operand*.
+The right operand is implicitly the argument in that position in the argument list, so
 
     function f(a #) { }
 
@@ -266,9 +264,14 @@ or pick out nested properties:
 
     function f(c # b #) { }
 
-or give defaults and do renaming and do existential checking:
+We can give defaults do renaming.
 
-    function f(c as x = 42 # b # if) { }
+    function f(c as x = 42 # b #) { }
+
+To my knowledge, no current proposal for deconstructing arguments addresses existential checking.
+With the pick operator, it's easy:
+
+    function(c # if) { }
 
 
 ## Grammar
