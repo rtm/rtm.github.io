@@ -7,8 +7,8 @@ layout: default
 
 This document propsoes a "pick" operator for JavaScript, also known as the "boberator".
 It is represented by the sharp sign.
-The pick operator can be considered a generalization of deconstruction,
-and provides an elegant solution to the so-called existential operator problem.
+The pick operator can be considered a generalization of deconstruction.
+It also provides an elegant solution to the so-called existential operator problem.
 
 
 ## Basics
@@ -96,11 +96,11 @@ which means to take the result of `picker-b`, and then pick from from it using `
 
     { a # b, c # d } # { b: { a: 1 }, d: { c: 2 } }      // { a: 1, c: 2 }
 
-Nested pickers can be any number of levels deep:
+Subpickers can be any number of levels deep:
 
     { a # b # c } # { c: { b: { a: 99 } } }              // { a: 99 }
 
-Nested pickers can a "picklist" on their left side, to allow picking of multiple properties from an intermediate pick.
+Subpickers can have a "picklist" on their left side, to allow picking of multiple properties from an intermediate pick.
 
     { (a, b) # c } # { c: { a: 1, b: 2 } }               // { a : 1, b : 2 }
 
@@ -120,11 +120,11 @@ A picklist is one of the following.
 
 In object picklists and array picklists, we support an empty spread operator in the final position. It refers to "remaining" properties.
 
-    { a as x, ... } # o     // { x: o.a, p1: o.p1, p2: o.p2, ... }
+    { a as x, ... } # o         // { x: o.a, p1: o.p1, p2: o.p2, ... }
 
 We can also use spreads with the **maybe pick operator** (see below).
 
-    {a as x, ... } # if o   // { x: undefined }
+    {a as x, ... } # if o       // { x: undefined }
 
 
 ### Computed pickers and other exotica
@@ -133,9 +133,9 @@ To pick a property whose name is given by an expression, we use the suffix `*` o
 
     propname* # o               // o[propname]
 
-When picking into objects, We can rename it if we so choose:
+If the value of a computed picker resolves to a string, it is interpreted as a property name.
 
-    { propname* as x } # o      // { x: o[propname] }
+    { 'a' + 'b'* } # { ab: 1 }  // { ab: 1 }
 
 If the value of a computed picker resolves to an array, its elements are interpreted as property names:
 
@@ -157,9 +157,11 @@ We can rename properties based on an expression using the computed picker operat
 
     { p as *newname } # o       // { [newname]: o.p }
 
-We can also rename properties, including multiple ones, by giving a function as the operand of `as`. The function is invoked with the property name:
+We can rename properties, including multiple ones, by giving a function as the operand of `as`.
+The function is invoked with the property name:
 
     { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }   // { q1: 1, q2: 2 }
+
 
 ### Mandatory and disallowed picking
 
