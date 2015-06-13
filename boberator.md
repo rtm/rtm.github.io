@@ -5,7 +5,11 @@ layout: default
 
 # JavaScript "Pick"  Operator
 
-This document presents a proposed "pick" operator for JavaScript, also known as the "boberator". It is represented by the sharp sign.
+This document propsoes a "pick" operator for JavaScript, also known as the "boberator".
+It is represented by the sharp sign.
+The pick operator can be considered a generalization of deconstruction,
+and provides an elegant solution to the so-called existential operator problem.
+
 
 ## Basics
 
@@ -24,10 +28,6 @@ The pick operator right-associates, so we can go down multiple levels.
 We can pick multiple properties into an object.
 
     { p1, p2 } # o        // { p1: o.p1, p2: o.p2 }
-
-We can pick some of them more deeply.
-
-    { p1, q # p2 } # o    // { o.p1, o.p2.q }
 
 We can pick object property values into an array.
 
@@ -49,17 +49,31 @@ We can give both a default and a renamer.
 
 ### Associativity
 
-Since the left operand must be a picker, whether a simple picker or a picklist,
+How is this parsed?
 
     q # p # o
 
-is parsed as
+It could be parsed as
 
-    q # (p # o)
+    q # ( p # o }
 
-It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is invalid syntax and in fact meaningless.
+were the pick operator right-associative.
 
+But it could equally be parsed as
 
+    ( q # p } # o
+
+where `q # p` is a "subpicker" See below.
+
+To be precise, the first means
+
+> pick `p` from `o`, yielding an object from which pick `q`
+
+Whereas the second means
+
+> pick `q` from the result of picking `p` from `o`
+
+which as you can see are the same.
 
 ## Pickers
 
@@ -70,7 +84,26 @@ A picker is one of a simple picker, an object picklist, an array picklist, or a 
 
 A **simple picker** has the following syntax.
 
-    key [as newname] [= default]
+    key[modifier] [as newname] [= default]
+
+### Subpicker
+
+Another form of the simple picker is the **subpicker**, which has the form
+
+    picker-a # picker-b
+
+which means to take the result of `picker-b`, and then pick from from it using `picker-a`. This allows us to say
+
+    { a # b, c # d } # { b: { a: 1 }, d: { c: 2 } }      // { a: 1, c: 2 }
+
+Nested pickers can be any number of levels deep:
+
+    { a # b # c } # { c: { b: { a: 99 } } }              // { a: 99 }
+
+Nested pickers can a "picklist" on their left side, to allow picking of multiple properties from an intermediate pick.
+
+    { (a, b) # c } # { c: { a: 1, b: 2 } }               // { a : 1, b : 2 }
+
 
 ### Picklists
 
@@ -80,7 +113,7 @@ A picklist is one of the following.
 
  1. an array-like construct containing pickers (**array picklist**), used to pick properties into an array
 
- 1. a parenthesized list of pickers, used in assignments (**variable picklist**), used to pick properties into variables
+ 1. a parenthesized list of pickers, used in assignments (**variable picklist**), used to pick properties into variables, or pick multiple properties in a subpicker
 
 
 ### Spreads in picklists
@@ -96,21 +129,21 @@ We can also use spreads with the **maybe pick operator** (see below).
 
 ### Computed pickers and other exotica
 
-To pick a property whose name is given by an expression, we use the prefix `*` operator:
+To pick a property whose name is given by an expression, we use the suffix `*` operator:
 
-    *propname # o               // o[propname]
+    propname* # o               // o[propname]
 
 When picking into objects, We can rename it if we so choose:
 
-    { *propname as x } # o      // { x: o[propname] }
+    { propname* as x } # o      // { x: o[propname] }
 
 If the value of a computed picker resolves to an array, its elements are interpreted as property names:
 
-    { *['p1', 'p2'] } # o       // { p1: o.p1, p2: o.p2 }
+    { ['p1', 'p2']* } # o       // { p1: o.p1, p2: o.p2 }
 
 If the value of a computed picker resolves to an object, its keys are used as the properties to be picked:
 
-    { *{ p1: 1, p2: 2 } } # o   // { p1: o.p1, p2: o.p2 }
+    { { p1: 1, p2: 2 }* } # o   // { p1: o.p1, p2: o.p2 }
 
 If the picker is a regular expression, it yields all matching property names:
 
@@ -147,6 +180,10 @@ We can check that all desired keys, given as an array of strings, exist:
 and to add a check that no other keys exist:
 
     { *keys!, ...^ } # o
+
+Check that no key starts with `q`:
+
+    { /^q/^ } # o
 
 
 ## Pick assignment
@@ -263,7 +300,7 @@ The equivalent of today's `[a, b] = [b, a];` is
 
 The power of this syntax is demonstrated by this example. Given an array of sort indexes, we can apply it using
 
-    [ *indexes ] @= array
+    [ indexes* ] @= array
 
 
 ## Picking from arguments
@@ -319,16 +356,17 @@ With the maybe pick operator, it's easy:
 | a        | simple picker | pick property `a` |
 | a!       | simple mandatory picker | pick property `a`, throw if missing |
 | a^       | simple disallow | throw if property `a` is present |
-| *a       | simple computed picker | pick property with key given by value of `a` |
+| a*       | simple computed picker | pick property with key given by value of `a` |
 | a = 42   | picker with default | pick property `a` with default |
 | b as a   | renaming picker | pick property `b` and rename to `a` |
 | b as a = 42  | renaming picker with default | pick property `b` and rename to `a`, defaulting to 42 |
 | b as fn  | renaming picker | pick property `b` and rename with result of calling fn |
-| b as *a  | renaming picker | pick property `b` and rename with value of `a` |
+| b as a*  | renaming picker | pick property `b` and rename with value of `a` |
 | /regexp/ | regexp picker | pick properties matching regexp |
 | fn       | filter picker | pick properties passing filter |
 | ...      | spread picker | pick remaining properties/elements |
+| a # b    | subpicker     | pick `a` from the result of picking `b` |
 | { a, b } | object picklist | pick into object |
 | [ a, b ] | array picklist | pick into arary |
-| ( a, b ) | variable picklist | pick into variables (assignment only) |
+| ( a, b ) | variable picklist | pick into variables (assignment only), or pick multiple properties in a subpicker |
 | -------- | -------- | -------|
