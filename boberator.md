@@ -1,6 +1,6 @@
 ---
 title: The JavaScript pick operator
-layout: post
+layout: default
 ---
 
 This document presents a new "pick" operator for JavaScript.
