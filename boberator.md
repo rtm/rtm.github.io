@@ -29,6 +29,10 @@ We can pick multiple properties into an object.
 
     { p1, p2 } # o        // { p1: o.p1, p2: o.p2 }
 
+We can pick more deeply.
+
+    { p1, p22 # p2 } # o
+
 We can pick object property values into an array.
 
     [ p1, p2 ] # o        // [o.p1, o.p2]
@@ -41,29 +45,32 @@ We can change names on the fly using a **renamer** specified by the `as` keyword
 
     { p1 as x, p2 } # o // { x: o.p1, p2: o.p2 }
 
-We use `as` rather than the colon, to avoid conceptual confusion with standard object literal syntax.
+We can assign variables based on a pick using the **pick assignment** operator.
 
-We can give both a default and a renamer.
+    let a #= o;
 
-    { p1 as x = 42, p2 } # o
+We can conditionally pick using the "maybe pick operator".
+
+    p # if o
+
+We can pick from an array instead of an object using the **array pick** operator.
+
+    { a, b } @ [ 1, 2 ]
+
+with analogous **assignment array pick** and **maybe array pick** operators also available as `@=` and `@ if`.
+
 
 ### Associativity
 
-How is this parsed?
-
     q # p # o
 
-It could be parsed as
+could be parsed in either of two ways:
 
     q # ( p # o }
-
-were the pick operator right-associative.
-
-But it could equally be parsed as
-
     ( q # p } # o
 
-where `q # p` is a "subpicker" See below. either interpretation ultimately has the same semantics.
+In the second, `q # p` is a "subpicker" (see below).
+Either interpretation ultimately has the same semantics.
 
 
 ## Pickers
@@ -76,6 +83,8 @@ A picker is one of a simple picker, an object picklist, an array picklist, or a 
 A **simple picker** has the following syntax.
 
     key[modifier] [as newname] [= default]
+
+`modifier` refers to the mandatory or not allowed modifiers discussed below.
 
 ### Subpicker
 
@@ -131,7 +140,7 @@ If the value of a computed picker resolves to a string, it is interpreted as a p
 
 If it is a string-valued expression, no `*` is necessary:
 
-    prompname.toLowerCase() # o
+    propname.toLowerCase() # o
 
 If the value of a computed picker resolves to an array, its elements are interpreted as property names:
 
@@ -200,18 +209,17 @@ Check that no key starts with `q`:
 
 ## Pick assignment
 
-Picking has an obvious relationship to deconstructing assignments. Consider:
+Picking has an obvious relationship to deconstructing assignments, of the form
 
     { p } = o;
 
-This has always struck me as a bit odd, and something in my experience newcomers typically wrestle with.
-Instead, in vague analogy to the addition assignment operator `+=`, we propose a **pick assignment operator** `#=`, as in
+To generalize and enhance deconstruction, we propose a **pick assignment operator** `#=`, as in
 
-    p #= o;                     // p = o.p;
+    p #= o;                     // p = o.p;, or { p } = o
 
 Multiple pickers (target variables) can be specified by providing a parenthesized list called a **variable picklist**:
 
-    ( p1, p2 ) #= o;            // p1 = o.p1; p2 = o.p2;
+    ( p1, p2 ) #= o;            // p1 = o.p1; p2 = o.p2; or, { p1, p2 } = o;
 
 or to also declare the variables:
 
@@ -239,11 +247,7 @@ To handle the existential/null propagation case, we introduce a variant of `#` c
 
 which returns void 0 is `o` is not an object, and can be chained as in
 
-    q # if p # if o
-
-which is the equivalent of
-
-    o?.p?.q
+    q # if p # if o             // o?.p?.q
 
 Defaults and renamers can be used with the maybe pick operator just as with the pick operator, so
 
