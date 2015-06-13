@@ -111,45 +111,60 @@ A picklist is one of the following.
 
 In object picklists and array picklists, we support an empty spread operator in the final position. It refers to "remaining" properties.
 
-    { a as x, ... } # o         // { x: o.a, p1: o.p1, p2: o.p2, ... }
+    { a as x, ... } # o      // { x: o.a, p1: o.p1, p2: o.p2, ... }
 
 We can also use spreads with the **maybe pick operator** (see below).
 
-    {a as x, ... } # if o       // { x: undefined }
+    {a as x, ... } # if o    // { x: undefined }
 
 
 ### Computed pickers and other exotica
 
 To pick a property whose name is given by an expression, we use the suffix `*` operator:
 
-    propname* # o               // o[propname]
+    propname* # o            // o[propname]
 
 If the value of a computed picker resolves to a string, it is interpreted as a property name.
 
-    { 'a' + 'b'* } # { ab: 1 }  // { ab: 1 }
+    propname = 'ab'
+    { propname* # { ab: 1 }  // { ab: 1 }
+
+If it is a string-valued expression, no `*` is necessary:
+
+    prompname.toLowerCase() # o
 
 If the value of a computed picker resolves to an array, its elements are interpreted as property names:
 
-    { ['p1', 'p2']* } # o       // { p1: o.p1, p2: o.p2 }
+    propnames = [ 'p1', 'p2' ]
+    { propnames* } # o       // { p1: o.p1, p2: o.p2 }
+
+If it is an array-valued expression, no `*` is necessary:
+
+    propnames.map(p => p.toLowerCase()) # o
 
 If the value of a computed picker resolves to an object, its keys are used as the properties to be picked:
 
-    { { p1: 1, p2: 2 }* } # o   // { p1: o.p1, p2: o.p2 }
+    propobj = { p1: 1, p2: 2 }
+    { propobj* } # o         // { p1: o.p1, p2: o.p2 }
+
+If it an object-valued epxression, no `*` is necessary:
+
+    Object.assign(propobj, { p3: 3 }) # o
 
 If the picker is a regular expression, it yields all matching property names:
 
-    { /^p/ } # o                // { p1: o.p1, p2: o.p2 }
+    { /^p/ } # o             // { p1: o.p1, p2: o.p2 }
 
 A function given as a pickname acts as a filter on property names:
 
-    { p => /2/.test(p) } # o    // { p2: o.p2 }
+    { p => /2/.test(p) } # o // { p2: o.p2 }
 
 We can rename properties based on an expression using the computed picker operator `*`:
 
-    { p as *newname } # o       // { [newname]: o.p }
+    { p as *newname } # o    // { [newname]: o.p }
 
 We can rename properties, including multiple ones, by giving a function as the operand of `as`.
-The function is invoked with the property name:
+The function is invoked with the property name, and must return a string.
 
     { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }   // { q1: 1, q2: 2 }
 
