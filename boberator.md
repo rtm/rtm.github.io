@@ -50,7 +50,8 @@ We can give both a default and a renamer.
 
 ## Pickers
 
-A picker is one of a simple picker, an object picklist, an array picklist, or a variable picklist. The left operand of the pick operator is a picker.
+The left operand of the pick operator is a **picker**.
+A picker is one of a simple picker, an object picklist, an array picklist, or a variable picklist.
 
 ### Simple picker
 
@@ -81,7 +82,7 @@ is parsed as
 It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is invalid syntax and in fact meaningless.
 
 
-### Spreads in pick lists
+### Spreads in picklists
 
 In object picklists and array picklists, we support an empty spread operator in the final position. It refers to "remaining" properties.
 
@@ -106,7 +107,7 @@ If the value of a computed picker resolves to an array, its elements are interpr
 
     { *['p1', 'p2'] } # o       // { p1: o.p1, p2: o.p2 }
 
-If the value of a comuputed picker resolves to an object, its keys are used as the properties to be picked:
+If the value of a computed picker resolves to an object, its keys are used as the properties to be picked:
 
     { *{ p1: 1, p2: 2 } } # o   // { p1: o.p1, p2: o.p2 }
 
@@ -131,6 +132,8 @@ We can also rename properties, including multiple ones, by giving a function as 
 We use the exclamation mark to indicate that a key specified in a picker *must* exist, otherwise a ReferenceError is thrown.
 
     p! # o                    // { p: o.p }; throws if p is missing
+
+The mandatory operator and the default keyword are mutually exclusive.
 
 We use the caret to indicate that a key specified in a picker *must not* exist.
 
@@ -274,7 +277,7 @@ or pick out nested properties:
 
     function f(c # b #) { }
 
-We can give defaults do renaming.
+We can give defaults and do renaming.
 
     function f(c as x = 42 # b #) { }
 
