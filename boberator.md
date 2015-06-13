@@ -102,7 +102,7 @@ When picking into objects, We can rename it if we so choose:
 
     { *propname as x } # o      // { x: o[propname] }
 
-If the value of a computed picker resovles to an array, its elemnets are interpreted as property names:
+If the value of a computed picker resolves to an array, its elements are interpreted as property names:
 
     { *['p1', 'p2'] } # o       // { p1: o.p1, p2: o.p2 }
 
@@ -258,7 +258,7 @@ The right operand is implicitly the argument in that position in the argument li
 
 corresponds to the above. Similarly, we can deconstruct array arguments with
 
-    function f([a, b] @) { }
+    function f((a, b) @) { }
 
 or pick out nested properties:
 
@@ -269,7 +269,7 @@ We can give defaults do renaming.
     function f(c as x = 42 # b #) { }
 
 To my knowledge, no current proposal for deconstructing arguments addresses existential checking.
-With the pick operator, it's easy:
+With the maybe pick operator, it's easy:
 
     function(c # if) { }
 
