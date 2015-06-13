@@ -1,3 +1,8 @@
+---
+title: The JavaScript pick operator
+layout: post
+---
+
 This document presents a new "pick" operator for JavaScript.
 
 ## Pick operator
@@ -61,7 +66,7 @@ which has always struck me as a bit odd, and I have found newcomers wrestling wi
 
     p #= o;
 
-Multiple pickers can be specified by providing a parenthesized list:
+Multiple pickers can be specified by providing a parenthesized list called a **variable picklist**:
 
     ( p, q ) #= o;
 
