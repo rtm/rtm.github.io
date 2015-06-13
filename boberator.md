@@ -126,6 +126,16 @@ We can also rename properties, including multiple ones, by giving a function as 
 
     { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }   // { q1: 1, q2: 2 }
 
+### Mandatory and exclusionary picking
+
+We use the exclamation mark to indicate that a key specified in a picker *must* exist, otherwise a ReferenceError is thrown.
+
+    p! # o                    // { p: o.p }; throws if p is missing
+
+We use the caret to indicate that a key specified in a picker *must not* exist.
+
+    (p, q^) # o               // { p: o.p }; throws if q is present
+
 
 ## Pick assignment
 
@@ -160,7 +170,7 @@ The left hand operand of the pick assignment operator must be a simple picker, o
     [ p ] #= o   // syntax error
 
 
-## The "mabye pick" operator
+## The "maybe pick" operator
 
 To handle the existential/null propagation case, we introduce a variant of `#` called `# if` (or `#?` if you prefer), named the **maybe pick operator**:
 
@@ -217,12 +227,6 @@ A single picker is the equivalent of `head`:
 
     a @ array
 
-### Array pick assignment
-
-We can declare/assign using the **array pick assignment operator**, '@=':
-
-    let (a, b) @= array;
-
 When picking from arrays, when the LHS is a picklist, the order of pickers corresponds to the order of elements in the array, with the normal convention of being able to elide elements:
 
     { a, , b } @ array    // { a: array[0], b: array[2] }
@@ -230,6 +234,12 @@ When picking from arrays, when the LHS is a picklist, the order of pickers corre
 We can pick from an array onto an array:
 
     [ 1, 0 ] @ array
+
+### Array pick assignment
+
+We can declare/assign using the **array pick assignment operator**, '@=':
+
+    let (a, b) @= array;
 
 By extension, we also have a **maybe array pick assignment operator**.
 
@@ -295,6 +305,8 @@ With the maybe pick operator, it's easy:
 | Syntax   | Name | Meaning |
 |:-------- |:---- |:------- |
 | a        | simple picker | pick property `a` |
+| a!       | simple mandatory picker | pick property `a`, throw if missing |
+| a^       | simple exclusion | throw is property `a` is present |
 | *a       | simple computed picker | pick property with key given by value of `a` |
 | a = 42   | picker with default | pick property `a` with default |
 | b as a   | renaming picker | pick property `b` and rename to `a` |
