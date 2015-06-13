@@ -5,7 +5,7 @@ layout: default
 
 # JavaScript "Pick"  Operator
 
-This document presents a proposed "pick" operator for JavaScript, also known as a "boberator". Here we use the sharp sign.
+This document presents a proposed "pick" operator for JavaScript, also known as the "boberator". It is represented by the sharp sign.
 
 ## Basics
 
@@ -29,7 +29,7 @@ We can pick some of them more deeply.
 
     { p1, q # p2 } # o    // { o.p1, o.p2.q }
 
-We can pick into an array.
+We can pick object property values into an array.
 
     [ p1, p2 ] # o        // [o.p1, o.p2]
 
@@ -46,6 +46,19 @@ We use `as` rather than the colon, to avoid conceptual confusion with standard o
 We can give both a default and a renamer.
 
     { p1 as x = 42, p2 } # o
+
+### Associativity
+
+Since the left operand must be a picker, whether a simple picker or a picklist,
+
+    q # p # o
+
+is parsed as
+
+    q # (p # o)
+
+It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is invalid syntax and in fact meaningless.
+
 
 
 ## Pickers
@@ -68,18 +81,6 @@ A picklist is one of the following.
  1. an array-like construct containing pickers (**array picklist**), used to pick properties into an array
 
  1. a parenthesized list of pickers, used in assignments (**variable picklist**), used to pick properties into variables
-
-### Associativity
-
-Since the left operand must be a picker, whether a simple picker or a picklist,
-
-    q # p # o
-
-is parsed as
-
-    q # (p # o)
-
-It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is invalid syntax and in fact meaningless.
 
 
 ### Spreads in picklists
@@ -127,17 +128,25 @@ We can also rename properties, including multiple ones, by giving a function as 
 
     { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }   // { q1: 1, q2: 2 }
 
-### Mandatory and exclusionary picking
+### Mandatory and disallowed picking
 
 We use the exclamation mark to indicate that a key specified in a picker *must* exist, otherwise a ReferenceError is thrown.
 
     p! # o                    // { p: o.p }; throws if p is missing
 
-The mandatory operator and the default keyword are mutually exclusive.
+The mandatory operator and a default specifier are mutually exclusive.
 
 We use the caret to indicate that a key specified in a picker *must not* exist.
 
     (p, q^) # o               // { p: o.p }; throws if q is present
+
+We can check that all desired keys, given as an array of strings, exist:
+
+    { *keys! } # o
+
+and to add a check that no other keys exist:
+
+    { *keys!, ...^ } # o
 
 
 ## Pick assignment
@@ -220,7 +229,7 @@ whereas with the above instead we can write
 
 To pick from arrays, we introduce the **array pick operator** `@`, analogous to `#`:
 
-    { a, b } @ array           // { a: array[0], b: array[1] }
+    { a, b } @ array      // { a: array[0], b: array[1] }
 
 The array pick operator has the same "maybe" variant, the **maybe array pick operator**:
 
@@ -309,16 +318,17 @@ With the maybe pick operator, it's easy:
 |:-------- |:---- |:------- |
 | a        | simple picker | pick property `a` |
 | a!       | simple mandatory picker | pick property `a`, throw if missing |
-| a^       | simple exclusion | throw is property `a` is present |
+| a^       | simple disallow | throw if property `a` is present |
 | *a       | simple computed picker | pick property with key given by value of `a` |
 | a = 42   | picker with default | pick property `a` with default |
 | b as a   | renaming picker | pick property `b` and rename to `a` |
+| b as a = 42  | renaming picker with default | pick property `b` and rename to `a`, defaulting to 42 |
 | b as fn  | renaming picker | pick property `b` and rename with result of calling fn |
+| b as *a  | renaming picker | pick property `b` and rename with value of `a` |
 | /regexp/ | regexp picker | pick properties matching regexp |
 | fn       | filter picker | pick properties passing filter |
-| b as a = 42  | renaming picker with default | pick property `b` and rename to `a`, defaulting to 42 |
 | ...      | spread picker | pick remaining properties/elements |
 | { a, b } | object picklist | pick into object |
 | [ a, b ] | array picklist | pick into arary |
 | ( a, b ) | variable picklist | pick into variables (assignment only) |
-| -------- | -------- |
+| -------- | -------- | -------|
