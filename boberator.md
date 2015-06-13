@@ -5,7 +5,7 @@ layout: default
 
 # JavaScript "Pick"  Operator
 
-This document propsoes a "pick" operator for JavaScript, also known as the "boberator".
+This document proposes a "pick" operator for JavaScript, also known as the "boberator".
 It is represented by the sharp sign.
 The pick operator can be considered a generalization of deconstruction.
 It also provides an elegant solution to the so-called existential operator problem.
@@ -63,17 +63,8 @@ But it could equally be parsed as
 
     ( q # p } # o
 
-where `q # p` is a "subpicker" See below.
+where `q # p` is a "subpicker" See below. either interpretation ultimately has the same semantics.
 
-To be precise, the first means
-
-> pick `p` from `o`, yielding an object from which pick `q`
-
-Whereas the second means
-
-> pick `q` from the result of picking `p` from `o`
-
-which as you can see are the same.
 
 ## Pickers
 
@@ -175,13 +166,17 @@ We use the caret to indicate that a key specified in a picker *must not* exist.
 
     (p, q^) # o               // { p: o.p }; throws if q is present
 
+and can specify its default if desired, which will always be used.
+
+    (p, q^ = 99) # o               // { p: o.p, q: 99 }; throws if q is present
+
 We can check that all desired keys, given as an array of strings, exist:
 
-    { *keys! } # o
+    { keys*! } # o
 
 and to add a check that no other keys exist:
 
-    { *keys!, ...^ } # o
+    { keys*!, ...^ } # o
 
 Check that no key starts with `q`:
 
@@ -316,14 +311,17 @@ including their maybe variants, with *no right operand*.
 The right operand is implicitly the argument in that position in the argument list, so
 
     function f(a #) { }
+    f({a: 1})
 
 corresponds to the above. Similarly, we can deconstruct array arguments with
 
     function f((a, b) @) { }
+    f([1, 2])
 
 or pick out nested properties:
 
     function f(c # b #) { }
+    f({ b: { c: 1 } })
 
 We can give defaults and do renaming.
 
