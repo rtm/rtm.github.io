@@ -3,50 +3,74 @@ title: The JavaScript pick operator
 layout: default
 ---
 
-This document presents a new "pick" operator for JavaScript.
+# JavaScript "Pick"  Operator
 
-## Pick operator
+This document presents a proposed "pick" operator for JavaScript, also known as a "boberator". Here we use the sharp sign.
 
-Consider a **pick operator**, also called the "boberator":
+## Basics
+
+The pick operator picks a property from an object. In its simplest form, it is the inverse of the dot operator.
 
     p # o                 // o.p
+
+The basic syntax is
+
+    picker # object
+
+The pick operator right-associates, so we can go down multiple levels.
+
     q # p # o             // o.p.q
 
-We can pick into an object:is
+We can pick multiple properties into an object.
 
     { p1, p2 } # o        // { p1: o.p1, p2: o.p2 }
 
-To pick more deeply
+We can pick some of them more deeply.
 
     { p1, q # p2 } # o    // { o.p1, o.p2.q }
 
-We can pick into an array with
+We can pick into an array.
 
     [ p1, p2 ] # o        // [o.p1, o.p2]
 
-We can provide default values
+We can provide default values in case the property is not present on the object, using an equal sign.
 
     p = 42 # o
 
-or change names on the fly using the `from` keyword:
+We can change names on the fly using a **renamer** specified by the `as` keyword.
 
-    { x from p1, p2 } # o // { x: o.p1, p2: o.p2 }
+    { p1 as x, p2 } # o // { x: o.p1, p2: o.p2 }
 
-or both
+We use `as` rather than the colon, to avoid conceptual confusion with standard object literal syntax.
 
-    { x from p1 = 42, p2 } # o
+We can give both a default and a renamer.
 
-We will call the construct `[name from] key [= default]` a **picker**. Then the left hand operator of `#` is always one of
+    { p1 as x = 42, p2 } # o
 
- 1. a picker
 
- 1. an object-like construct containing pickers
+## Pickers
 
- 1. an array-like construct containing pickers
+A picker is one of a simple picker, an object picklst, an array picklist, or a variable picklist. The left operand of the pick operator is a picker.
 
- 1. a parenthesized list of pickers, used in assignments (see below)
+### Simple picker
 
-In terms of associativity, therefore
+A **simple picker** has the following syntax.
+
+    key [as newname ] [= default]
+
+### Picklists
+
+A picklist is one of the following.
+
+ 1. an object-like construct containing pickers (**object picklist**), used to pick properties into an object
+
+ 1. an array-like construct containing pickers (**array picklist**), used to pick properties into an array
+
+ 1. a parenthesized list of pickers, used in assignments (**variable picklist), used to pick properties into variables
+
+### Associativity
+
+Since the left operand must be a picker or picklist,
 
     q # p # o
 
@@ -54,63 +78,121 @@ is parsed as
 
     q # (p # o)
 
-and indeed `(q # p) # o` is invalid syntax and in fact meaningless.
+It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is invalid syntax and in fact meaningless.
 
-### Pick assignment
 
-There is an obvious relationship to deconstructing assignments. Instead of
+### Spreads in pick lists
+
+In object picklists (`{ a } # o`) and array picklists (`[ a ] # o`), we support an empty spread operator in the final position, as in
+
+    { x is a, ... } # o    // { x: o.a, p1: o.p1, p2: o.p2, ... }
+
+We can also use spreads with maybe pick (see below).
+
+    {x is a = 42, ...} # if o  // { x: undefined }
+
+
+### Computed pickers and other exotica
+
+To pick a property whose name is given by an expression, we use the prefix `*` operator:
+
+    *propname # o     // o[propname]
+
+When picking into objects, We can rename it if we so choose:
+
+    { *propname as x } # o       // { x: o[propname] }
+
+If the value of a computed picker resovles to an array, its elemnets are interpreted as property names:
+
+    { *['p1', 'p2'] } # o       // { p1: o.p1, p2: o.p2 }
+
+If the value of a comupter picker resolves to an object, its keys are used as the properties to be picked:
+
+    { *{ p1: 1, p2: 2 } } # o   // { p1: o.p1, p2: o.p2 }
+
+A regular expression given as a pickname yields all matching property names:
+
+    { /^p/ } # o                // { p1: o.p1, p2: o.p2 }
+
+A function given as a pickname acts as a filter on property names:
+
+    { p => p.length === 2 } # o
+
+We can rename properties based on an expression using the computed picker operator `*`:
+
+    { p as *newname } # o     // { [newname]: o.p }
+
+We can also rename properties, including multiple ones, by giving a function as the operand of `as`. The function is invoked with the property name:
+
+    { /^p/ as p => p.replace('p', 'q' } # { p1: 1, p2: 2 }
+
+which yields
+
+    { q1: 1, q2: 2 }
+
+Finally, we support "pick comprehensions":
+
+
+## Pick assignment
+
+Picking has an obvious relationship to deconstructing assignments. Consider:
 
     { p } = o;
 
-which has always struck me as a bit odd, and I have found newcomers wrestling with it, in vague analogy to the addition assignment operator `+=`, we propose a **pick assignment operator**, as in
+This has always struck me as a bit odd, and something in my experience newcomers typically wrestle.
+Instead, in vague analogy to the addition assignment operator `+=`, we propose a **pick assignment operator** `#=`, as in
 
     p #= o;
 
-Multiple pickers can be specified by providing a parenthesized list called a **variable picklist**:
+Multiple pickers (target variables) can be specified by providing a parenthesized list called a **variable picklist**:
 
-    ( p, q ) #= o;
+    ( p1, p2 ) #= o;         // p1 = o.p1; p2 = o.p2;
 
-or
+or to also declare the variables:
 
-    let ( p, q ) #= o;
+    let ( p1, p2 ) #= o;
 
 Like all pickers, the picker on the left side of `#=` could include defaults and renamers, so
 
-    x from p = 42 #= o;
+    p as x = 42 #= o;
 
 means to find the `p` property in `o`, or use 42 if it is not present, and assign the result to `x`.
 
-### Existential operator
+The left hand operand of the pick assignment operator must be a simple picker, or a variable picklist. It is meaningless to assign to an array or object.
 
-To handle the existential/null propagation case, we introduce a variant of # called `# if` (or `#?` if you prefer), named the **maybe pick** operator:
+      p   #= o   // assign o.p to variable p
+    ( p ) #= o   // same as above
+    { p } #= o   // syntax error
+    [ p ] #= o   // syntax error
 
-    p #? o
 
-which returns void 0 is o is not an object, and can be chained as in
+## The "mabye pick" operator
 
-    q #? p #? o
+To handle the existential/null propagation case, we introduce a variant of `#` called `# if` (or `#?` if you prefer), named the **maybe pick** operator:
+
+    p # if o
+
+which returns void 0 is `o` is not an object, and can be chained as in
+
+    q # if p # if o
 
 which is the equivalent of
 
     o?.p?.q
 
-Perhaps the `if` alternative is more readable:
+Defaults and renamers can be used with the maybe pick operator just as with the pick operator, so
 
-    q # if p # if o
+    p as x  = 42 # if o
 
-Below we will use `# if`. Defaults and renamers can be used with the maybe pick operator just as with the pick operator, so
-
-    x from p = 42 # if o
-
-The maybe pick operator and be combined with the assignment pick operator, so
+The maybe pick operator and be combined with the assignment pick operator, yielding the **maybe pick assignment operator**, `#= if`.
 
     p #= if o
 
-essentially means
+This means
 
-    p = o-is-object ? o.p : undefined
+    p = Object.is(o) ? o.p : undefined
 
-An advantage of some currently proposed existential operator syntax, consider an object
+An advantage over of some currently proposed existential operator syntax is the following. Cconsider an object
 
     {a: { b : { c1: 1, c2: 2 } }
 
@@ -118,43 +200,24 @@ where we want to obtain
 
     { c1: a.b.c1, c2: a.b.c2 }
 
-but with currently proposed syntax for existential checks, so we would have to write
+With currently proposed syntax for existential checks, so we would have to write
 
     { c1: a?.b?.c1, c2: a?.b?.c2 }
 
-whereas with the above instead we could write
+whereas with the above instead we can write
 
     { c1, c2 } # if b # if a
 
-### Spreads in pick lists
 
-In object-style (`{ a } # o`) and array-style (`[ a ] # o`) pick lists, we support an empty spread operator in the final position, as in
-
-    { x from a, ... } # o    // { x: o.a, p1: o.p1, p2: o.p2, ... }
-
-or
-
-    {x from a = 42, ...} # if o
-
-With some trepidation, we could extend the use of the spread in parenthesized pick lists used in pick assignments:
-
-    (x from a, ...) #= o
-
-which would create a variable `x` from the `a` property and additional variables from the remaining properties, although I have no idea how to lint that.
-
-### Computed property names
-
-We support computed computed property names in renamers:
-
-    { [name] from a } # o
-
-### Picking from arrays
+## Picking from arrays: the array pick operator
 
 To pick from arrays, we introduce the array pick operator `@`, analogous to `#`:
 
     { a, b } @ array
 
-which results in `{ a: array[0], b: array[1] }`.
+resulting in
+
+    { a: array[0], b: array[1] }
 
 The array pick operator has the same "maybe" variant, the **maybe array pick operator**:
 
@@ -164,9 +227,7 @@ A single picker is the equivalent of `head`:
 
     a @ array
 
-We can also use the empty spread operator here, so tail is
-
-    [, ...] @ array
+### Array pick assignment
 
 We can declare/assign using the **array pick assignment operator**, '@=':
 
@@ -180,34 +241,40 @@ We can pick from an array onto an array:
 
     [ 1, 0 ] @ array
 
-### Picking from arguments
+By extension, we also have a **maybe array pick assignment operator**.
+
+    [a, b] @= if array
+
+
+## Picking from arguments
 
 To provide the equivalent of deconstructing function arguments:
 
-    function f({ a }) {
+    function f({ a }) { }
 
 we use the pick (or array pick) operator, including their maybe variants, with *no right operand*. The right operand is implicitly the argument in that position in the argument list, so
 
-    function f(a #) {
+    function f(a #) { }
 
 corresponds to the above. Similarly, we can deconstruct array arguments with
 
-    function f([a, b] @) {
+    function f([a, b] @) { }
 
 or pick out nested properties:
 
-    function f(c # b #) {
+    function f(c # b #) { }
 
 or give defaults and do renaming and do existential checking:
 
-    function f(x from c = 42 # b # if) {
+    function f(c as x = 42 # b # if) { }
+
 
 ## Grammar
 
 ### Operators
 
 | Operator | Meaning |
-| -------- | -------- |
+|:-------- |:-------- |
 | #        | pick     |
 | # if     | maybe pick |
 | #=       | pick assignment |
@@ -218,17 +285,20 @@ or give defaults and do renaming and do existential checking:
 | @= if    | maybe array pick assignment |
 | -------- | -------- |
 
-### Pickers and picklists
+### Pickers
 
 | Syntax   | Name | Meaning |
-| -------- | ---- | ------- |
+|:-------- |:---- |:------- |
 | a        | simple picker | pick property `a` |
+| *a       | simple computed picker | pick property with key given by value of `a` |
 | a = 42   | picker with default | pick property `a` with default |
-| a from b   | renaming picker | pick property `b` and rename to `a` |
+| b as a   | renaming picker | pick property `b` and rename to `a` |
+| b as fn  | renaming picker | pick property `b` and rename with result of calling fn |
+| /regexp/ | regexp picker | pick properties matching regexp |
+| fn       | filter picker | pick properties passing filter |
+| b as a = 42  | renaming picker with default | pick property `b` and rename to `a`, defaulting to 42 |
 | ...      | spread picker | pick remaining properties/elements |
 | { a, b } | object picklist | pick into object |
 | [ a, b ] | array picklist | pick into arary |
-| ( a, b ) | variable picklist | pick into variables (assignment case) |
+| ( a, b ) | variable picklist | pick into variables (assignment only) |
 | -------- | -------- |
-
-## Prototype
