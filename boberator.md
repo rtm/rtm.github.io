@@ -56,7 +56,7 @@ A picker is one of a simple picker, an object picklst, an array picklist, or a v
 
 A **simple picker** has the following syntax.
 
-    key [as newname ] [= default]
+    key [as newname] [= default]
 
 ### Picklists
 
@@ -66,11 +66,11 @@ A picklist is one of the following.
 
  1. an array-like construct containing pickers (**array picklist**), used to pick properties into an array
 
- 1. a parenthesized list of pickers, used in assignments (**variable picklist), used to pick properties into variables
+ 1. a parenthesized list of pickers, used in assignments (**variable picklist**), used to pick properties into variables
 
 ### Associativity
 
-Since the left operand must be a picker or picklist,
+Since the left operand must be a picker, whether a simple picker or a picklist,
 
     q # p # o
 
@@ -83,13 +83,13 @@ It cannot be parsed as `(q # p) # o`, since `(q # p)` is not a picker. This is i
 
 ### Spreads in pick lists
 
-In object picklists (`{ a } # o`) and array picklists (`[ a ] # o`), we support an empty spread operator in the final position, as in
+In object picklists and array picklists, we support an empty spread operator in the final position. It refers to "remaining" properties.
 
-    { x is a, ... } # o    // { x: o.a, p1: o.p1, p2: o.p2, ... }
+    { a as x, ... } # o     // { x: o.a, p1: o.p1, p2: o.p2, ... }
 
-We can also use spreads with maybe pick (see below).
+We can also use spreads with the **maybe pick operator** (see below).
 
-    {x is a = 42, ...} # if o  // { x: undefined }
+    {a as x, ... } # if o   // { x: undefined }
 
 
 ### Computed pickers and other exotica
@@ -106,17 +106,17 @@ If the value of a computed picker resovles to an array, its elemnets are interpr
 
     { *['p1', 'p2'] } # o       // { p1: o.p1, p2: o.p2 }
 
-If the value of a comupter picker resolves to an object, its keys are used as the properties to be picked:
+If the value of a comuputed picker resolves to an object, its keys are used as the properties to be picked:
 
     { *{ p1: 1, p2: 2 } } # o   // { p1: o.p1, p2: o.p2 }
 
-A regular expression given as a pickname yields all matching property names:
+If the picker is a regular expression, it yields all matching property names:
 
     { /^p/ } # o                // { p1: o.p1, p2: o.p2 }
 
 A function given as a pickname acts as a filter on property names:
 
-    { p => p.length === 2 } # o
+    { p => /2/.test(p)} # o     // { p2: o.p2 }
 
 We can rename properties based on an expression using the computed picker operator `*`:
 
@@ -129,8 +129,6 @@ We can also rename properties, including multiple ones, by giving a function as 
 which yields
 
     { q1: 1, q2: 2 }
-
-Finally, we support "pick comprehensions":
 
 
 ## Pick assignment
@@ -168,7 +166,7 @@ The left hand operand of the pick assignment operator must be a simple picker, o
 
 ## The "mabye pick" operator
 
-To handle the existential/null propagation case, we introduce a variant of `#` called `# if` (or `#?` if you prefer), named the **maybe pick** operator:
+To handle the existential/null propagation case, we introduce a variant of `#` called `# if` (or `#?` if you prefer), named the **maybe pick operator**:
 
     p # if o
 
@@ -211,7 +209,7 @@ whereas with the above instead we can write
 
 ## Picking from arrays: the array pick operator
 
-To pick from arrays, we introduce the array pick operator `@`, analogous to `#`:
+To pick from arrays, we introduce the **array pick operator** `@`, analogous to `#`:
 
     { a, b } @ array
 
@@ -235,7 +233,7 @@ We can declare/assign using the **array pick assignment operator**, '@=':
 
 With the array picker, when the LHS is object-style or array-style, the order of pickers corresponds to the order of elements in the array, with the normal convention of being able to elide elements:
 
-    { a, , b } @ array
+    { a, , b } @ array    // { a: array[0], b: array[2] }
 
 We can pick from an array onto an array:
 
@@ -244,6 +242,10 @@ We can pick from an array onto an array:
 By extension, we also have a **maybe array pick assignment operator**.
 
     [a, b] @= if array
+
+Using computed pickers, given an array of sort indexes, we can apply it using
+
+    [ *indexes ] @= array
 
 
 ## Picking from arguments
