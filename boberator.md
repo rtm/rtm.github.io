@@ -43,19 +43,19 @@ We can provide default values in case the property is not present on the object,
 
 We can change names on the fly using a **renamer** specified by the `as` keyword.
 
-    { p1 as x, p2 } # o // { x: o.p1, p2: o.p2 }
+    { p1 as x, p2 } # o   // { x: o.p1, p2: o.p2 }
 
 We can assign variables based on a pick using the **pick assignment** operator.
 
-    let a #= o;
+    let a #= o;          // let a = o.a;
 
 We can conditionally pick using the "maybe pick operator".
 
-    p # if o
+    p # if o             // typeof o === 'object' ? o.p : void o
 
 We can pick from an array instead of an object using the **array pick** operator.
 
-    { a, b } @ [ 1, 2 ]
+    { a, b } @ [ 1, 2 ] // { a: 1, b: 2 }
 
 with analogous **assignment array pick** and **maybe array pick** operators also available as `@=` and `@ if`.
 
@@ -124,7 +124,7 @@ In object picklists and array picklists, we support an empty spread operator in 
 
 We can also use spreads with the **maybe pick operator** (see below).
 
-    {a as x, ... } # if o    // { x: undefined }
+    {a as x, ... } # if null // { x: undefined }
 
 
 ### Computed pickers and other exotica
@@ -156,7 +156,7 @@ If the value of a computed picker resolves to an object, its keys are used as th
     propobj = { p1: 1, p2: 2 }
     { propobj* } # o         // { p1: o.p1, p2: o.p2 }
 
-If it an object-valued epxression, no `*` is necessary:
+If it is an object-valued expression, no `*` is necessary:
 
     Object.assign(propobj, { p3: 3 }) # o
 
@@ -170,7 +170,7 @@ A function given as a pickname acts as a filter on property names:
 
 We can rename properties based on an expression using the computed picker operator `*`:
 
-    { p as *newname } # o    // { [newname]: o.p }
+    { p as newname* } # o    // { [newname]: o.p }
 
 We can rename properties, including multiple ones, by giving a function as the operand of `as`.
 The function is invoked with the property name, and must return a string.
@@ -351,6 +351,58 @@ With the maybe pick operator, it's easy:
 
     function(c # if) { }
 
+## Picking from `this`
+
+Given the frequency of picking from this, we also provide shorthands for that case, the **this pick operator**.
+
+    a ##                  // this.a, or CoffeeScript @a
+    { a, b } ##           // { this.a, this.b }
+
+An extension is the **this pick assignment operator**.
+
+    a ##=                 // a = this.a
+
+A parallel **this pick array operator** picks from arrays:
+
+    {a, b} @@             // { this[0], this[1] }
+
+With a corresponding **this pick array assignment perator**:
+
+    a @@=                 // a = this[0]
+
+
+## Picking from multiple objects
+
+The occasion arises where we want to pick form multiple objects. This can be accomplished as in
+
+    { a # x, b # y } # { x: { a: 1 }, y: { b: 2 } }
+
+If that's considered a bit unwieldy, try array picking instead.
+
+    { a # 0, b # 1 } # [ { a: 1 }, { b: 2 } ]
+
+
+## Fat arrow picking
+
+It is common to have functions whose only job is picking.
+Let's say I wanted to pick the `a` property from an array of objects:
+
+    objects . map(object => a # object)
+
+Due the frequency of this idiom, we provide the fat arrow pick:
+
+    objects . map(a #=>)
+
+Which also comes in a maybe version:
+
+    objects. map(a #=> if)
+
+and a this version:
+
+    objects . map(a ##=>)
+
+
+
 
 ## Grammar
 
@@ -366,6 +418,10 @@ With the maybe pick operator, it's easy:
 | @ if     | maybe array pick |
 | @=       | array pick assignment |
 | @= if    | maybe array pick assignment |
+| ##       | this pick |
+| ##=      | this pick assignment |
+| @@       | this array pick |
+| @@=      | this array pick assignment |
 | -------- | -------- |
 
 ### Pickers
