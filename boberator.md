@@ -31,7 +31,7 @@ We can pick multiple properties into an object.
 
 We can pick more deeply.
 
-    { p1, p22 # p2 } # o
+    { p1, p22 # p2 } # o  // { p1: o.p1, p22: o.p2.p22 }
 
 We can pick object property values into an array.
 
@@ -39,7 +39,7 @@ We can pick object property values into an array.
 
 We can provide default values in case the property is not present on the object, using an equal sign.
 
-    p = 42 # o
+    p = 42 # {}           // 42
 
 We can change names on the fly using a **renamer** specified by the `as` keyword.
 
@@ -51,7 +51,7 @@ We can assign variables based on a pick using the **pick assignment** operator.
 
 We can conditionally pick using the "maybe pick operator".
 
-    p # if o             // typeof o === 'object' ? o.p : void o
+    p # if o             // o && typeof o === 'object' ? o.p : void o
 
 We can pick from an array instead of an object using the **array pick** operator.
 
@@ -245,7 +245,7 @@ To handle the existential/null propagation case, we introduce a variant of `#` c
 
     p # if o
 
-which returns void 0 is `o` is not an object, and can be chained as in
+which returns void 0 is `o` if not an object, and can be chained as in
 
     q # if p # if o             // o?.p?.q
 
@@ -253,7 +253,8 @@ Defaults and renamers can be used with the maybe pick operator just as with the 
 
     p as x  = 42 # if o
 
-The maybe pick operator and be combined with the assignment pick operator, yielding the **maybe pick assignment operator**, `#= if`.
+The maybe pick operator and be combined with the assignment pick operator,
+yielding the **maybe pick assignment operator**, `#= if`.
 
     p #= if o
 
@@ -261,7 +262,8 @@ This means
 
     p = Object.is(o) ? o.p : undefined
 
-An advantage over of some currently proposed existential operator syntax is the following. Cconsider an object
+An advantage over of some currently proposed existential operator syntax is the following.
+Consider an object
 
     {a: { b : { c1: 1, c2: 2 } }
 
@@ -292,7 +294,9 @@ A single picker is the equivalent of `head`:
 
     a @ array
 
-When picking from arrays, when the LHS is a picklist, the order of pickers corresponds to the order of elements in the array, with the normal convention of being able to elide elements:
+When picking from arrays, when the LHS is a picklist,
+the order of pickers corresponds to the order of elements in the array,
+with the normal convention of being able to elide elements:
 
     { a, , b } @ array    // { a: array[0], b: array[2] }
 
@@ -397,11 +401,9 @@ Which also comes in a maybe version:
 
     objects. map(a #=> if)
 
-and a this version:
+and a `this` version:
 
-    objects . map(a ##=>)
-
-
+    objects . map(a ##=>)   // objects . map(() => this.a)
 
 
 ## Grammar
@@ -422,6 +424,7 @@ and a this version:
 | ##=      | this pick assignment |
 | @@       | this array pick |
 | @@=      | this array pick assignment |
+| #=>      | fat arrow pick |
 | -------- | -------- |
 
 ### Pickers
