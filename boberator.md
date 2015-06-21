@@ -40,13 +40,13 @@ Underscore has acknowledged the importance of property arithmetic with APIs such
 
 #### `_.pick`
 
-The `_.pick` API, called as:
+The `_.pick` API is called as:
 
     _.pick(o, 'p1, 'p2')
 
 Drawbacks here include:
 
- 1. We have to inconviently quote each property name.
+ 1. We have to inconveniently quote each property name.
 
  1. The object `o` is accessed anew each time through a loop across properties, a potential inefficiency.
 
@@ -75,7 +75,7 @@ In plain old JavaScript, we'd have to do something like
 
     _.pluck([ o1, o2 ], 'p')
 
-which returns `[ { p: o1.p }, { p: o2.p }]
+which returns `[ { p: o1.p }, { p: o2.p }]`
 
 and is essentially equivalent to
 
@@ -103,10 +103,8 @@ Underscore has also seen fit to provide the following property-related utilities
 
 Other libraries have also acknolwedged the importance of pick-like operations.
 
- * Ember has `Ember.Object#getProperties.
+ * Ember has `Ember.Object#getProperties`.
 
-
-### Other current approaches
 
 ### Picking with destructuring assignment
 
@@ -126,13 +124,13 @@ This gives us defaults, renaming, and deep picking, but the property names must 
 
 We could write
 
-    (({p1, p2}) => ({p1, p2})(o)
+    (({p1, p2}) => ({p1, p2}))(o)
 
 Using destruturing of arguments, but this seems more trouble than it's worth, and the properties must still be written out twice.
 
 ### Summary
 
-In the simplest case where we are picking a single property from an object, we can write `o.p`, but have to worry about null objects and defaults ourselves. We look for syntactic sugar which allows to say the equivalent of:
+In the simplest case where we are picking a single property from an object, we can write `o.p`, but have to worry about null objects and defaults ourselves. We want syntactic sugar which allows to say the equivalent of:
 
 > for property p, using default d, pick from object o, assuming it's an object
 
@@ -140,7 +138,7 @@ instead of writing
 
     o && typeof o === 'object' ? 'p' in o ? o.p : 42 : void 0
 
-In the equally common case, where we are picking two properties from an object, we have to write `{ p1: o.p1, p2: o.p2 }`, which allows us renaming, but no default or null object handling.
+In the equally common case, where we are picking two properties from an object, we have to write `{ p1: o.p1, p2: o.p2 }`, which allows us renaming, but no default or null object handling. We want to be able to succinctly say:
 
 > create an object with the value of property p1, using default d1, and renamed to q1, and the value of property p2, using default d2, and renamed to q1, pick from object o, assuming it's an object
 
@@ -168,7 +166,7 @@ We can pick **into** objects, with
 
     { p1, p2 } # o
 
-with defaults and null-object checking as above, in addition to renaming:
+with defaults and null-object checking as above, in addition to renaming using the colon:
 
     { p1: q1, p2 } # o   // {q1: o.p1, p2: o.p2 }
 
