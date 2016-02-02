@@ -1,6 +1,4 @@
 ---
-title: The JavaScript pick operator
-layout: default
 ---
 
-Hello
+Bob's github pages.
