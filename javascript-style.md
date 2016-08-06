@@ -40,7 +40,7 @@ This also applies to object literals, where you should also use spaces after the
 By "delimiter" we mean parentheses, curly brackets, and square brackets. Put a space before opening delimiters and after closing delimiters. This includes the parentheses around the expressions in `if`, `for`, `while`, and `switch` statements. Do not put spaces *after* opening delimiters or *before* closing delimiters. Do not put spaces between adjacent opening delimiters or closing delimiters.
 
     if (flag) x = 1;
-    for (var x
+    for (let x
     while (true)
     switch (val) {
 
@@ -48,10 +48,10 @@ The exception is the parenthesis introducing a named function's parameter list, 
 
 #### 1.1.4. Alignment
 
-We encourage you to use horizontal whitespace to line things up if you so prefer.
+Avoid using horizontal whitespace to line things up.
 
-    var a    = 1;
-    var flag = true;
+    const a   = 1;
+    let  flag = true;
 
 ### 1.2. Vertical whitespace
 
@@ -65,7 +65,7 @@ Use vertical space within functions to separate sections of code.
 
 #### 1.2.3. Newline at EOF
 
-End files with a newline. editorconfig settings will enforce this.
+End files with a newline. `editorconfig` settings will enforce this.
 
 ## 2. Comments
 
@@ -87,7 +87,7 @@ Precede each section within a function with a `//` comment.
 
 ### 2.5. `FIXME` and `TODO` comments
 
-Use as needed.
+Use as needed. Feel free to use the `FIXMEEEE` convention to indicate priority.
 
 ### 2.6. Old commented code
 
@@ -108,9 +108,7 @@ Examples include the body of `if` or `for` statements.
 
 However, a short function may and often should be placed on the same line. This avoids vertical sprawl.
 
-    function (a) { return a + 1; }
-
-In this case, **do** add spaces after the opening brace and before the closing one.
+    function (a) {return a + 1;}
 
 ### 3.3. Braceless blocks
 
@@ -139,19 +137,21 @@ However, it is also completely accepetable to abbreviate this as
 
 Put all your imports at the top.
 
-### 4.2. Exports at bottom
+### 4.2. Location of exports
 
-Put all your exports at the bottom.
+Put all your exports at the bottom, or export individual values when declared, as you please.
 
-## 5. `var`
+## 5. `const`, and `let`
 
-### 5.1. Multiple `var`'s
+### 5.1. Multiple `const` and `let`
 
-Use multiple `var`/`const`/`let` statements.
+Use multiple ``const`/`let` statements.
 This makes them easier to add and delete without worrying about commas.
 
-    var a;
-    var b;
+    const a = 1;
+    let b;
+
+Avoid `var`.
 
 ## 6. Quotes
 
@@ -170,13 +170,13 @@ Use double quotes for human-oriented strings.
 camelCased.
 Avoid overly short names like `p2`.
 
-    var myVar;
+    let myVar;
 
 ### 7.2. Constant names
 
-Use all upper-case for constant names, with underscores. Prefer declaring them with `const`..
+Use all upper-case for constant names, with underscores. Prefer declaring them with `const`.
 
-    var TIMEOUT_MS = 1000;
+    const TIMEOUT_MS = 1000;
 
 ### 7.3. Class or import names
 
@@ -217,15 +217,11 @@ Use `if (array.length)`, not `if (array.length > 0)`.
 
 ### 9.1. Dot spacing
 
-When chaining calls on one line, place spaces on each side of the dot.
+When a chain does not fit on one line, use the dot on the following line:
 
-    find(id) . filter(isActive) . map(getName);
-
-When a chain does not fit on one line, use the dot on the preceding line:
-
-    find(id) .
-      filter(isActive) .
-      map(getName);
+    find(id)
+      .filter(isActive)
+      .map(getName);
 
 ## 10. Other issues
 
@@ -277,7 +273,7 @@ Prefer the use of ES6 syntax for brevity, including:
 
  * Shorthand object literals, such as `{x, y}`, and `{ foo() { } }` for methods
  * Arrow functions
- * Deconstruction in assignments: `var {a, b} = object;`
+ * Deconstruction in assignments: `const {a, b} = object;`
  * Spread operator: `function F(...a)`
  * Template literals (`foo.com?param=${param}`)
  * Computed property names
@@ -288,7 +284,7 @@ Prefer the use of ES6 syntax for brevity, including:
 Use "concise bodies" (single returned expression) where possible.
 Do not parenthesize single arguments:
 
-a => a + 1
+    a => a + 1
 
 ### 10.6.2 Modules
 
@@ -314,20 +310,22 @@ Use the same rules as for JS.
 
 Simple rules may be placed on the same line:
 
+    .big {font-size: x-large;}
+
 ### 11.2. Vertical spacing
 
-Use vertical spacing to delineate rules.
+Use vertical spacing to delineate rulesets.
 
 ### 11.3. Comments
 
-11.3.1. Place comment for entire file at top; comment blocks of declarations.
+11.3.1. Place a comment for entire file at top; comment blocks of declarations.
 
 11.3.2. Use `/* */ comments, even in SCSS which supports `//`.
 
 ### 11.3. Things to avoid
 
  * in SCSS/SASS/LESS, unreasonably deep nesting (more than 2-3 levels)
- * unnecessary dependencies on particularities ofthe HTML structure.
+ * unnecessary dependencies on particularities ofthe HTML structure
  * `@extend`
  * hard-wired colors (use variables if available)
 
@@ -341,6 +339,7 @@ Use the same rules as for JS.
 
 Do not put spaces after `<` beginning an HTML element, or before `>` closing it.
 Do not put spaces around `=` giving attribute values or named parameters to helpers/views.
+Do not close tags such as `<img>` which do not need to be closed.
 Quote attributes.
 
     <a href="boo.html">
@@ -358,16 +357,16 @@ Place comment for entire file at top; comment blocks of code.
 
 #### 12.3.2. Comment syntax
 
-Use your templating engine's commenting mechanism in preference to `<!-- -->`, which remain in the generated HTML.
+Use your templating engine's commenting mechanism, if available,
+in preference to `<!-- -->`, which remain in the generated HTML.
 
 ## 13. Differences from other standard styleguides
 
  * Allow braces to be omitted for one-statement blocks on the same line.
  * Distinguish between single (machine) and double (human) quotes.
- * Use multiple `var` statements.
+ * Use multiple `const`/`let` statements.
 
-
-## 15. Use JSCS to check your code styling before pushing it
+## 15. Use JSCS or eslint  to check your code styling before pushing it
 
 ### 15.1 Installing JSCS
 
